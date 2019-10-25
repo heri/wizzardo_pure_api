@@ -24,7 +24,7 @@ public class DBController extends Controller {
     DBService dbService;
 
     public void index() {
-        User[] users = new User[];
+        User[] users = new User[10];
 
         AtomicInteger counter = new AtomicInteger(0);
         AtomicBoolean failed = new AtomicBoolean(false);
@@ -32,7 +32,7 @@ public class DBController extends Controller {
 
         response.async();
 
-        pool.preparedQuery("SELECT * FROM users"), res -> {
+        pool.preparedQuery("SELECT * FROM users LIMIT 10"), res -> {
             if (res.succeeded()) {
                 PgIterator resultSet = res.result().iterator();
                 Tuple row = resultSet.next();
