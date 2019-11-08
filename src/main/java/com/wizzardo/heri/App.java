@@ -8,13 +8,6 @@ import com.wizzardo.http.request.Request;
 import com.wizzardo.http.response.JsonResponseHelper;
 
 public class App {
-    public static class Message {
-        public String message;
-
-        public Message(String message) {
-            this.message = message;
-        }
-    }
 
     public static void main(String[] args) {
         WebApplication webApplication = new WebApplication(args) {

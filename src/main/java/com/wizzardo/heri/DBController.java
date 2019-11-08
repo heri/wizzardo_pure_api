@@ -32,11 +32,11 @@ public class DBController extends Controller {
 
         response.async();
 
-        pool.preparedQuery("SELECT * FROM users LIMIT 10"), res -> {
+        pool.preparedQuery("SELECT id, firstName, lastName FROM users LIMIT 10"), res -> {
             if (res.succeeded()) {
                 PgIterator resultSet = res.result().iterator();
                 Tuple row = resultSet.next();
-                users[index] = new User(row.getString(0), row.getString(1), row.get);
+                users[index] = new User(row.getString(0), row.getString(1), row.getString(2));
             } else {
                 res.cause().printStackTrace();
                 if (failed.compareAndSet(false, true)) {
@@ -62,15 +62,18 @@ public class DBController extends Controller {
 
         response.async();
 
-        pool.preparedBatch("UPDATE users SET firstName=$1, lastName=$2 WHERE id=$3", Tuple.of(firstName, lastName, id), res -> {
+        pool.preparedQuery("UPDATE users SET firstName=$1, lastName=$2 WHERE id=$3", Tuple.of(firstName, lastName, id), res -> {
             if (res.failed()) {
                 response.status(Status._500).body(res.cause().getMessage());
             } else {
                 PgIterator resultSet = res.result().iterator();
-                Tuple row = resultSet.next();
-                users[index] = new User(row.getString(0), row.getString(1), row.getString(2));
-                response.appendHeader(Header.KV_CONTENT_TYPE_APPLICATION_JSON);
-                response.body(JsonTools.serializeToBytes(users));
+                if (!resultSet.hasNext()) {
+                    response.status(Status._404);
+                } else {
+                    Tuple row = resultSet.next();
+                    response.appendHeader(Header.KV_CONTENT_TYPE_APPLICATION_JSON);
+                    response.body(JsonTools.serializeToBytes(new User(id, firstName, lastName)));
+                }
             }
             commitAsyncResponse();
         });
@@ -89,11 +92,7 @@ public class DBController extends Controller {
         response.reset();
     }
 
-    protected int getRandomNumber() {
-        return 1 + ThreadLocalRandom.current().nextInt(10000);
-    }
-
-    public static final class User implements Comparable<User> {
+    public static final class User {
         public String id;
         public String firstName;
         public String lastName;
@@ -103,10 +102,6 @@ public class DBController extends Controller {
             this.firstName = firstName;
             this.lastName = lastName;
         }
-
-        @Override
-        public int compareTo(User o) {
-            return Integer.compare(id, o.id);
-        }
     }
+
 }
