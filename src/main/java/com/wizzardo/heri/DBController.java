@@ -32,7 +32,7 @@ public class DBController extends Controller {
 
         response.async();
 
-        pool.preparedQuery("SELECT id, firstName, lastName FROM users LIMIT 10"), res -> {
+        pool.preparedQuery("SELECT id, firstName, lastName FROM users LIMIT 10", res -> {
             if (res.succeeded()) {
                 PgIterator resultSet = res.result().iterator();
                 Tuple row = resultSet.next();
@@ -57,7 +57,7 @@ public class DBController extends Controller {
         static String firstName = (String)params().get("firstName");
         static String lastName = (String)params().get("lastName");
         static String id = (String)params().get("id");
-        User[] users = new User[];
+        
         PgPool pool = dbService.getClient();
 
         response.async();
